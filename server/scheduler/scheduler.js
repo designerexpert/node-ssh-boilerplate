@@ -6,10 +6,14 @@ const getSqlDate = (date = null) => {
 }
 
 const executeProcess = (process) => (executeDate) => {
+    process.LAST_RUN = getSqlDate(executeDate);
+    process.NEXT_RUN = getSqlDate(process.SCHEDULE.nextInvocation()._date);
     console.log("\n------------------------------------------");
     console.log('>>> ON DATETIME:', executeDate)
     console.log(">>> EXECUTING PROCESS ID:", process.PROCESS_ID);
     console.log(">>> EXECUTING PROCESS:", process.PROCESS_NAME);
+    console.log(">>> LAST RUN:", process.LAST_RUN);
+    console.log(">>> NEXT RUN:", process.NEXT_RUN);
     console.log("------------------------------------------\n");
 }
 
@@ -40,15 +44,14 @@ const generateFrequencyString = (FREQUENCY, START_DATE) => {
 const readMetaDataAndScheduleJobs = () => {
     const today = Date.now();
     metaData.forEach(process => {
-        const processScheduledStart = new Date(process.START_DATE);
-        const processScheduledEnd = new Date(process.END_DATE);
-        let freqStr = generateFrequencyString(process.FREQUENCY, processScheduledStart)
-        if (processScheduledStart <= today && processScheduledEnd >= today) {
-            // IF TODAY'S DATE FALLS WITHIN THE SCHEDULED WINDOW OF TIME.
-            const ref = schedule.scheduleJob(freqStr, executeProcess(process));
-            console.log('SCHEDULED ONE:', ref)
-            console.log('NEXT INVOCATION', ref.nextInvocation())
-        }
+        const start = new Date(process.START_DATE);
+        const end = new Date(process.END_DATE);
+        const rule = generateFrequencyString(process.FREQUENCY, start)
+        const options = { start, end, rule };
+        const ref = schedule.scheduleJob(options, executeProcess(process));
+        process.SCHEDULE = ref;
+        process.NEXT_RUN = ref.nextInvocation();
+        console.log('NEXT INVOCATION', ref.nextInvocation());
     })
 }
 
