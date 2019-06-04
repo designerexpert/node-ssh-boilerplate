@@ -41,23 +41,31 @@ const generateFrequencyString = (FREQUENCY, START_DATE) => {
     }
 }
 
+const scheduleProcess = (process) => {
+    const start = new Date(process.START_DATE);
+    const end = new Date(process.END_DATE);
+    const rule = generateFrequencyString(process.FREQUENCY, start)
+    const options = { start, end, rule };
+    const ref = schedule.scheduleJob(options, executeProcess(process));
+    process.SCHEDULE = ref;
+    process.NEXT_RUN = ref.nextInvocation();
+    console.log('>>> SUCCESSFULLY SCHEDULED:', process.PROCESS_NAME);
+    console.log('>>> NEXT INVOCATION:', ref.nextInvocation());
+}
+
 const readMetaDataAndScheduleJobs = () => {
     const today = Date.now();
     metaData.forEach(process => {
-        const start = new Date(process.START_DATE);
-        const end = new Date(process.END_DATE);
-        const rule = generateFrequencyString(process.FREQUENCY, start)
-        const options = { start, end, rule };
-        const ref = schedule.scheduleJob(options, executeProcess(process));
-        process.SCHEDULE = ref;
-        process.NEXT_RUN = ref.nextInvocation();
-        console.log('NEXT INVOCATION', ref.nextInvocation());
+        scheduleProcess(process);
     })
 }
 
 readMetaDataAndScheduleJobs();
 
-
-
-
-// console.log('THE SQL DATE IS', getSqlDate());
+module.exports = {
+    readMetaDataAndScheduleJobs,
+    getSqlDate,
+    generateFrequencyString,
+    executeProcess,
+    scheduleProcess
+}
