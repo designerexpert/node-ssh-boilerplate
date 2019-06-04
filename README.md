@@ -1,4 +1,4 @@
-# NODE SSH BOILERPLATE
+# NODE SSH BOILERPLATE (P.O.C.)
 
 ### Set UP
 * Create `.env` file at the root directory
